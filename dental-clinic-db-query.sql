@@ -186,9 +186,9 @@ CREATE TABLE Permissions (
 );
 
 -- Create roles per user table
-CREATE TABLE RolesPerUser (
-    UserID INT,
-    RoleID INT,
+CREATE TABLE RolesUser (
+    user_id INT,
+    role_id INT,
     PRIMARY KEY (UserID, RoleID),
     FOREIGN KEY (UserID) REFERENCES Users(UserID),
     FOREIGN KEY (RoleID) REFERENCES Roles(RoleID)
