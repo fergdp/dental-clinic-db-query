@@ -17,10 +17,10 @@ CREATE TABLE Roles (
 CREATE TABLE Users (
     UserID INT PRIMARY KEY AUTO_INCREMENT,
     Username VARCHAR(50) NOT NULL,
-    Password VARCHAR(255) NOT NULL, -- Password should be stored hashed
+    PasswordHash VARCHAR(255) NOT NULL, -- Password should be stored hashed
     Email VARCHAR(100),
     RoleID INT,
-    enabled TINYINT DEFAULT 1, -- Adding enabled column with default value 1
+    IsEnabled TINYINT DEFAULT 1, -- Adding enabled column with default value 1
     FOREIGN KEY (RoleID) REFERENCES Roles(RoleID)
 );
 
@@ -69,7 +69,7 @@ CREATE TABLE Appointments (
     FOREIGN KEY (PatientID) REFERENCES Patients(PatientID)
 );
 
--- Create Treatments Per Patient table
+-- Create TreatmentsPerPatient table
 CREATE TABLE TreatmentsPerPatient (
     TreatmentPerPatientID INT PRIMARY KEY AUTO_INCREMENT,
     PatientID INT,
@@ -80,19 +80,19 @@ CREATE TABLE TreatmentsPerPatient (
     FOREIGN KEY (TreatmentID) REFERENCES Treatments(TreatmentID)
 );
 
--- Create Repairs Per Tooth table
+-- Create RepairsPerTooth table
 CREATE TABLE RepairsPerTooth (
     RepairPerToothID INT PRIMARY KEY AUTO_INCREMENT,
     PatientID INT,
     ToothID INT,
     Description TEXT,
-    Date DATE,
+    RepairDate DATE,
     FOREIGN KEY (PatientID) REFERENCES Patients(PatientID),
     FOREIGN KEY (ToothID) REFERENCES Teeth(ToothID)
 );
 
 -- Associate patients with health insurances
-CREATE TABLE PatientsHealthInsurances (
+CREATE TABLE PatientHealthInsurances (
     PatientID INT,
     HealthInsuranceID INT,
     MembershipNumber VARCHAR(20),
@@ -106,18 +106,18 @@ CREATE TABLE Sessions (
     SessionID INT PRIMARY KEY AUTO_INCREMENT,
     UserID INT,
     Token VARCHAR(255) NOT NULL,
-    StartDate DATETIME NOT NULL,
-    ExpiryDate DATETIME NOT NULL,
+    StartTime DATETIME NOT NULL,
+    EndTime DATETIME NOT NULL,
     FOREIGN KEY (UserID) REFERENCES Users(UserID)
 );
 
 -- Add Changes History table
 CREATE TABLE ChangesHistory (
     ChangeID INT PRIMARY KEY AUTO_INCREMENT,
-    AffectedTable VARCHAR(50) NOT NULL,
+    AffectedTableName VARCHAR(50) NOT NULL,
     RecordID INT,
     UserID INT,
-    ChangeDate DATETIME NOT NULL,
+    ChangeDateTime DATETIME NOT NULL,
     Details TEXT,
     FOREIGN KEY (UserID) REFERENCES Users(UserID)
 );
@@ -145,7 +145,7 @@ CREATE TABLE Payments (
 CREATE TABLE Reminders (
     ReminderID INT PRIMARY KEY AUTO_INCREMENT,
     PatientID INT,
-    DateTime DATETIME NOT NULL,
+    ReminderDateTime DATETIME NOT NULL,
     Message TEXT,
     Status ENUM('Pending', 'Completed') DEFAULT 'Pending',
     FOREIGN KEY (PatientID) REFERENCES Patients(PatientID)
@@ -174,7 +174,7 @@ CREATE TABLE PatientPortal (
     PortalID INT PRIMARY KEY AUTO_INCREMENT,
     PatientID INT,
     UserID INT,
-    RegistrationDate TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    RegistrationDateTime TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (PatientID) REFERENCES Patients(PatientID),
     FOREIGN KEY (UserID) REFERENCES Users(UserID)
 );
@@ -185,7 +185,7 @@ CREATE TABLE Permissions (
     PermissionName VARCHAR(50) NOT NULL
 );
 
--- Create roles per user table
+-- Create RolesPerUser table
 CREATE TABLE RolesPerUser (
     UserID INT,
     RoleID INT,
@@ -194,7 +194,7 @@ CREATE TABLE RolesPerUser (
     FOREIGN KEY (RoleID) REFERENCES Roles(RoleID)
 );
 
--- Create permissions per role table
+-- Create PermissionsPerRole table
 CREATE TABLE PermissionsPerRole (
     RoleID INT,
     PermissionID INT,
