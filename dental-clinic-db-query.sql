@@ -1,117 +1,204 @@
 -- Drop database if exists to avoid errors
-DROP DATABASE IF EXISTS dental_clinic;  -- Use dental_clinic for a more generic name
+DROP DATABASE IF EXISTS dental_clinic_db;
 
 -- Create database
-CREATE DATABASE dental_clinic;
+CREATE DATABASE dental_clinic_db;
 
 -- Use the database
-USE dental_clinic;
+USE dental_clinic_db;
 
 -- Create Roles table
 CREATE TABLE Roles (
-  role_id INT PRIMARY KEY AUTO_INCREMENT,
-  role_name VARCHAR(50) NOT NULL UNIQUE -- Enforce unique role names
+    RoleID INT PRIMARY KEY AUTO_INCREMENT,
+    RoleName VARCHAR(50) NOT NULL
 );
 
--- Create Users table
+-- Add Users table
 CREATE TABLE Users (
-  user_id INT PRIMARY KEY AUTO_INCREMENT,
-  username VARCHAR(50) NOT NULL UNIQUE, -- Enforce unique usernames
-  password_hash VARCHAR(255) NOT NULL, -- Store password securely using a hash function
-  email VARCHAR(100) UNIQUE, -- Enforce unique email addresses
-  role_id INT NOT NULL,
-  is_enabled TINYINT(1) NOT NULL DEFAULT 1, -- Use a more descriptive column name
-  FOREIGN KEY (role_id) REFERENCES Roles(role_id)
+    UserID INT PRIMARY KEY AUTO_INCREMENT,
+    Username VARCHAR(50) NOT NULL,
+    Password VARCHAR(255) NOT NULL, -- Password should be stored hashed
+    Email VARCHAR(100),
+    RoleID INT,
+    enabled TINYINT DEFAULT 1, -- Adding enabled column with default value 1
+    FOREIGN KEY (RoleID) REFERENCES Roles(RoleID)
 );
 
 -- Create Patients table
 CREATE TABLE Patients (
-  patient_id INT PRIMARY KEY AUTO_INCREMENT,
-  first_name VARCHAR(50) NOT NULL,
-  last_name VARCHAR(50) NOT NULL,
-  date_of_birth DATE NOT NULL,
-  address VARCHAR(100),
-  phone_number VARCHAR(20),
-  email VARCHAR(50) UNIQUE, -- Enforce unique email addresses
-  gender ENUM('Male', 'Female', 'Other')
+    PatientID INT PRIMARY KEY AUTO_INCREMENT,
+    FirstName VARCHAR(50) NOT NULL,
+    LastName VARCHAR(50) NOT NULL,
+    DateOfBirth DATE,
+    Address VARCHAR(100),
+    Phone VARCHAR(20),
+    Email VARCHAR(50),
+    Gender ENUM('Male', 'Female', 'Other')
 );
 
--- Create Health Insurance Providers table (changed name for clarity)
-CREATE TABLE Health_Insurance_Providers (
-  provider_id INT PRIMARY KEY AUTO_INCREMENT,
-  name VARCHAR(50) NOT NULL,
-  plan_name VARCHAR(50),
-  details TEXT
+-- Create Health Insurances table
+CREATE TABLE HealthInsurances (
+    HealthInsuranceID INT PRIMARY KEY AUTO_INCREMENT,
+    Name VARCHAR(50) NOT NULL,
+    Plan VARCHAR(50),
+    Details TEXT
 );
 
 -- Create Treatments table
 CREATE TABLE Treatments (
-  treatment_id INT PRIMARY KEY AUTO_INCREMENT,
-  name VARCHAR(50) NOT NULL,
-  description TEXT,
-  cost DECIMAL(10, 2) NOT NULL
+    TreatmentID INT PRIMARY KEY AUTO_INCREMENT,
+    Name VARCHAR(50) NOT NULL,
+    Description TEXT,
+    Cost DECIMAL(10, 2)
 );
 
 -- Create Teeth table
 CREATE TABLE Teeth (
-  tooth_id INT PRIMARY KEY AUTO_INCREMENT,
-  name VARCHAR(50) NOT NULL,
-  position VARCHAR(20)
+    ToothID INT PRIMARY KEY AUTO_INCREMENT,
+    Name VARCHAR(50) NOT NULL,
+    Position VARCHAR(20)
 );
 
 -- Create Appointments table
 CREATE TABLE Appointments (
-  appointment_id INT PRIMARY KEY AUTO_INCREMENT,
-  patient_id INT NOT NULL,
-  date_time DATETIME NOT NULL,
-  observations TEXT,
-  status ENUM('Pending', 'Confirmed', 'Cancelled'),
-  FOREIGN KEY (patient_id) REFERENCES Patients(patient_id)
+    AppointmentID INT PRIMARY KEY AUTO_INCREMENT,
+    PatientID INT,
+    DateTime DATETIME NOT NULL,
+    Observations TEXT,
+    Status ENUM('Pending', 'Confirmed', 'Cancelled'),
+    FOREIGN KEY (PatientID) REFERENCES Patients(PatientID)
 );
 
--- Create Treatment Plans table (changed name for clarity)
-CREATE TABLE Treatment_Plans (
-  plan_id INT PRIMARY KEY AUTO_INCREMENT,
-  patient_id INT NOT NULL,
-  treatment_id INT NOT NULL,
-  start_date DATE,
-  end_date DATE,
-  FOREIGN KEY (patient_id) REFERENCES Patients(patient_id),
-  FOREIGN KEY (treatment_id) REFERENCES Treatments(treatment_id)
+-- Create Treatments Per Patient table
+CREATE TABLE TreatmentsPerPatient (
+    TreatmentPerPatientID INT PRIMARY KEY AUTO_INCREMENT,
+    PatientID INT,
+    TreatmentID INT,
+    StartDate DATE,
+    EndDate DATE,
+    FOREIGN KEY (PatientID) REFERENCES Patients(PatientID),
+    FOREIGN KEY (TreatmentID) REFERENCES Treatments(TreatmentID)
 );
 
--- Create Procedures Per Tooth table (changed name for clarity)
-CREATE TABLE Procedures_Per_Tooth (
-  procedure_id INT PRIMARY KEY AUTO_INCREMENT,
-  patient_id INT NOT NULL,
-  tooth_id INT NOT NULL,
-  description TEXT,
-  procedure_date DATE,
-  FOREIGN KEY (patient_id) REFERENCES Patients(patient_id),
-  FOREIGN KEY (tooth_id) REFERENCES Teeth(tooth_id)
+-- Create Repairs Per Tooth table
+CREATE TABLE RepairsPerTooth (
+    RepairPerToothID INT PRIMARY KEY AUTO_INCREMENT,
+    PatientID INT,
+    ToothID INT,
+    Description TEXT,
+    Date DATE,
+    FOREIGN KEY (PatientID) REFERENCES Patients(PatientID),
+    FOREIGN KEY (ToothID) REFERENCES Teeth(ToothID)
 );
 
--- Associate patients with health insurance providers
-CREATE TABLE Patient_Insurance (
-  patient_id INT NOT NULL,
-  provider_id INT NOT NULL,
-  membership_number VARCHAR(20),
-  PRIMARY KEY (patient_id, provider_id),
-  FOREIGN KEY (patient_id) REFERENCES Patients(patient_id),
-  FOREIGN KEY (provider_id) REFERENCES Health_Insurance_Providers(provider_id)
+-- Associate patients with health insurances
+CREATE TABLE PatientsHealthInsurances (
+    PatientID INT,
+    HealthInsuranceID INT,
+    MembershipNumber VARCHAR(20),
+    PRIMARY KEY (PatientID, HealthInsuranceID),
+    FOREIGN KEY (PatientID) REFERENCES Patients(PatientID),
+    FOREIGN KEY (HealthInsuranceID) REFERENCES HealthInsurances(HealthInsuranceID)
 );
 
 -- Add Sessions table for user management
 CREATE TABLE Sessions (
-  session_id INT PRIMARY KEY AUTO_INCREMENT,
-  user_id INT NOT NULL,
-  token VARCHAR(255) NOT NULL,
-  start_date DATETIME NOT NULL,
-  expiry_date DATETIME NOT NULL,
-  FOREIGN KEY (user_id) REFERENCES Users(user_id)
+    SessionID INT PRIMARY KEY AUTO_INCREMENT,
+    UserID INT,
+    Token VARCHAR(255) NOT NULL,
+    StartDate DATETIME NOT NULL,
+    ExpiryDate DATETIME NOT NULL,
+    FOREIGN KEY (UserID) REFERENCES Users(UserID)
 );
 
--- Add Audit Log table (changed name for clarity)
-CREATE TABLE Audit_Log (
-  log_id INT PRIMARY KEY AUTO_INCREMENT,
-  table_name VARCHAR(50) NOT NULL,
+-- Add Changes History table
+CREATE TABLE ChangesHistory (
+    ChangeID INT PRIMARY KEY AUTO_INCREMENT,
+    AffectedTable VARCHAR(50) NOT NULL,
+    RecordID INT,
+    UserID INT,
+    ChangeDate DATETIME NOT NULL,
+    Details TEXT,
+    FOREIGN KEY (UserID) REFERENCES Users(UserID)
+);
+
+-- Add Billing and Payments tables
+CREATE TABLE Invoices (
+    InvoiceID INT PRIMARY KEY AUTO_INCREMENT,
+    PatientID INT,
+    IssueDate DATE NOT NULL,
+    TotalAmount DECIMAL(10, 2) NOT NULL,
+    Status ENUM('Pending', 'Paid') DEFAULT 'Pending',
+    FOREIGN KEY (PatientID) REFERENCES Patients(PatientID)
+);
+
+CREATE TABLE Payments (
+    PaymentID INT PRIMARY KEY AUTO_INCREMENT,
+    InvoiceID INT,
+    Amount DECIMAL(10, 2) NOT NULL,
+    PaymentDate DATE NOT NULL,
+    PaymentMethod VARCHAR(50),
+    FOREIGN KEY (InvoiceID) REFERENCES Invoices(InvoiceID)
+);
+
+-- Add Agenda and Reminders table
+CREATE TABLE Reminders (
+    ReminderID INT PRIMARY KEY AUTO_INCREMENT,
+    PatientID INT,
+    DateTime DATETIME NOT NULL,
+    Message TEXT,
+    Status ENUM('Pending', 'Completed') DEFAULT 'Pending',
+    FOREIGN KEY (PatientID) REFERENCES Patients(PatientID)
+);
+
+-- Add Custom Forms table
+CREATE TABLE Forms (
+    FormID INT PRIMARY KEY AUTO_INCREMENT,
+    Name VARCHAR(100) NOT NULL,
+    Description TEXT,
+    Fields TEXT -- Design how to store form fields as per your needs
+);
+
+CREATE TABLE FormResponses (
+    ResponseID INT PRIMARY KEY AUTO_INCREMENT,
+    PatientID INT,
+    FormID INT,
+    Responses TEXT,
+    ResponseDate DATE,
+    FOREIGN KEY (PatientID) REFERENCES Patients(PatientID),
+    FOREIGN KEY (FormID) REFERENCES Forms(FormID)
+);
+
+-- Add Patient Portal table
+CREATE TABLE PatientPortal (
+    PortalID INT PRIMARY KEY AUTO_INCREMENT,
+    PatientID INT,
+    UserID INT,
+    RegistrationDate TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (PatientID) REFERENCES Patients(PatientID),
+    FOREIGN KEY (UserID) REFERENCES Users(UserID)
+);
+
+-- Create Permissions table
+CREATE TABLE Permissions (
+    PermissionID INT PRIMARY KEY AUTO_INCREMENT,
+    PermissionName VARCHAR(50) NOT NULL
+);
+
+-- Create roles per user table
+CREATE TABLE RolesPerUser (
+    UserID INT,
+    RoleID INT,
+    PRIMARY KEY (UserID, RoleID),
+    FOREIGN KEY (UserID) REFERENCES Users(UserID),
+    FOREIGN KEY (RoleID) REFERENCES Roles(RoleID)
+);
+
+-- Create permissions per role table
+CREATE TABLE PermissionsPerRole (
+    RoleID INT,
+    PermissionID INT,
+    PRIMARY KEY (RoleID, PermissionID),
+    FOREIGN KEY (RoleID) REFERENCES Roles(RoleID),
+    FOREIGN KEY (PermissionID) REFERENCES Permissions(PermissionID)
+);
