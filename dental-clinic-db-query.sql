@@ -18,9 +18,9 @@ CREATE TABLE Users (
     UserID INT PRIMARY KEY AUTO_INCREMENT,
     Username VARCHAR(50) NOT NULL,
     PasswordHash VARCHAR(255) NOT NULL, -- Password should be stored hashed
-    Email VARCHAR(100),
+    Email VARCHAR(100) UNIQUE,
     RoleID INT,
-    IsEnabled TINYINT DEFAULT 1, -- Adding enabled column with default value 1
+    IsEnabled TINYINT DEFAULT 1,
     FOREIGN KEY (RoleID) REFERENCES Roles(RoleID)
 );
 
@@ -33,7 +33,8 @@ CREATE TABLE Patients (
     Address VARCHAR(100),
     Phone VARCHAR(20),
     Email VARCHAR(50),
-    Gender ENUM('Male', 'Female', 'Other')
+    Gender ENUM('Male', 'Female', 'Other'),
+    CONSTRAINT CHK_Gender CHECK (Gender IN ('Male', 'Female', 'Other'))
 );
 
 -- Create Health Insurances table
@@ -48,8 +49,9 @@ CREATE TABLE HealthInsurances (
 CREATE TABLE Treatments (
     TreatmentID INT PRIMARY KEY AUTO_INCREMENT,
     Name VARCHAR(50) NOT NULL,
-    Description TEXT,
-    Cost DECIMAL(10, 2)
+    Description VARCHAR(255),
+    Cost DECIMAL(10, 2),
+    CONSTRAINT CHK_Cost CHECK (Cost >= 0)
 );
 
 -- Create Teeth table
@@ -77,7 +79,8 @@ CREATE TABLE TreatmentsPerPatient (
     StartDate DATE,
     EndDate DATE,
     FOREIGN KEY (PatientID) REFERENCES Patients(PatientID),
-    FOREIGN KEY (TreatmentID) REFERENCES Treatments(TreatmentID)
+    FOREIGN KEY (TreatmentID) REFERENCES Treatments(TreatmentID),
+    CONSTRAINT CHK_DateRange CHECK (StartDate < EndDate)
 );
 
 -- Create RepairsPerTooth table
@@ -98,7 +101,8 @@ CREATE TABLE PatientHealthInsurances (
     MembershipNumber VARCHAR(20),
     PRIMARY KEY (PatientID, HealthInsuranceID),
     FOREIGN KEY (PatientID) REFERENCES Patients(PatientID),
-    FOREIGN KEY (HealthInsuranceID) REFERENCES HealthInsurances(HealthInsuranceID)
+    FOREIGN KEY (HealthInsuranceID) REFERENCES HealthInsurances(HealthInsuranceID),
+    CONSTRAINT UC_MembershipNumber UNIQUE (MembershipNumber)
 );
 
 -- Add Sessions table for user management
@@ -135,7 +139,7 @@ CREATE TABLE Invoices (
 CREATE TABLE Payments (
     PaymentID INT PRIMARY KEY AUTO_INCREMENT,
     InvoiceID INT,
-    Amount DECIMAL(10, 2) NOT NULL,
+    Amount DECIMAL(10, 2) NOT NULL CHECK (Amount > 0),
     PaymentDate DATE NOT NULL,
     PaymentMethod VARCHAR(50),
     FOREIGN KEY (InvoiceID) REFERENCES Invoices(InvoiceID)
