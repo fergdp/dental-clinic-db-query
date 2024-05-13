@@ -189,8 +189,8 @@ CREATE TABLE permissions (
     permission_name VARCHAR(50) NOT NULL
 );
 
--- Create roles per user table
-CREATE TABLE roles_user (
+-- Create roles users table
+CREATE TABLE roles_users (
     user_id INT,
     role_id INT,
     PRIMARY KEY (user_id, role_id),
@@ -198,8 +198,8 @@ CREATE TABLE roles_user (
     FOREIGN KEY (role_id) REFERENCES roles(role_id)
 );
 
--- Create permissions per role table
-CREATE TABLE permissions_role (
+-- Create permissions roles table
+CREATE TABLE permissions_roles (
     role_id INT,
     permission_id INT,
     PRIMARY KEY (role_id, permission_id),
