@@ -10,13 +10,13 @@ USE dental_clinic_db;
 -- Create roles table
 CREATE TABLE roles (
     role_id INT PRIMARY KEY AUTO_INCREMENT,
-    role_name VARCHAR(50) NOT NULL
+    role_name VARCHAR(50) NOT NULL UNIQUE
 );
 
 -- Add users table
 CREATE TABLE users (
     user_id INT PRIMARY KEY AUTO_INCREMENT,
-    username VARCHAR(50) NOT NULL,
+    username VARCHAR(50) NOT NULL UNIQUE,
     password_hash VARCHAR(255) NOT NULL, -- Password should be stored hashed
     email VARCHAR(100) UNIQUE,
     role_id INT,
@@ -190,7 +190,7 @@ CREATE TABLE permissions (
 );
 
 -- Create roles users table
-CREATE TABLE roles_users (
+CREATE TABLE users_roles (
     user_id INT,
     role_id INT,
     PRIMARY KEY (user_id, role_id),
