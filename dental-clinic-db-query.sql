@@ -19,9 +19,7 @@ CREATE TABLE users (
     username VARCHAR(50) NOT NULL UNIQUE,
     password_hash VARCHAR(255) NOT NULL, -- Password should be stored hashed
     email VARCHAR(100) UNIQUE,
-    role_id INT,
-    is_enabled TINYINT DEFAULT 1,
-    FOREIGN KEY (role_id) REFERENCES roles(role_id)
+    is_enabled TINYINT DEFAULT 1
 );
 
 -- Create patients table
@@ -194,8 +192,8 @@ CREATE TABLE users_roles (
     user_id INT,
     role_id INT,
     PRIMARY KEY (user_id, role_id),
-    FOREIGN KEY (user_id) REFERENCES users(user_id),
-    FOREIGN KEY (role_id) REFERENCES roles(role_id)
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
+    FOREIGN KEY (role_id) REFERENCES roles(role_id) ON DELETE CASCADE
 );
 
 -- Create permissions roles table
