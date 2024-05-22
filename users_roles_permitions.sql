@@ -2,7 +2,7 @@
 USE dental_clinic_db;
 
 -- Insert roles into the Roles table
-INSERT INTO Roles (role_name)
+INSERT INTO roles (role_name)
 VALUES ('admin'), ('receptionist'), ('dentist'), ('dentist_assistant'), ('patient'), ('user');
 
 INSERT INTO users (username, password_hash, email, is_enabled) VALUES ('admin', 'unpass', 'admin@example.com', true);
