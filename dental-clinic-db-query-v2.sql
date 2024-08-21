@@ -1,11 +1,11 @@
 -- Drop database if exists to avoid errors
-DROP DATABASE IF EXISTS dental_clinic_db;
+DROP DATABASE IF EXISTS dental_clinic_db_v2;
 
 -- Create database
-CREATE DATABASE dental_clinic_db;
+CREATE DATABASE dental_clinic_db_v2;
 
 -- Use the database
-USE dental_clinic_db;
+USE dental_clinic_db_v2;
 
 -- Create roles table
 CREATE TABLE roles (
@@ -17,22 +17,31 @@ CREATE TABLE roles (
 CREATE TABLE users (
     user_id BIGINT PRIMARY KEY AUTO_INCREMENT,
     username VARCHAR(50) NOT NULL UNIQUE,
-    password_hash VARCHAR(255) NOT NULL,
+    password_hash VARCHAR(60) NOT NULL, -- bcrypt hashes are typically 60 characters long
     email VARCHAR(100) UNIQUE,
-    is_enabled TINYINT DEFAULT 1
-);
-
--- Create patients table
-CREATE TABLE patients (
-    patient_id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    is_enabled TINYINT DEFAULT 1,
     first_name VARCHAR(50) NOT NULL,
     last_name VARCHAR(50) NOT NULL,
     date_of_birth DATE,
-    address VARCHAR(100),
+    street VARCHAR(100),
+    city VARCHAR(50),
+    state VARCHAR(50),
+    postal_code VARCHAR(20),
+    country_code VARCHAR(5), -- ISO country code
     phone VARCHAR(20),
-    email VARCHAR(50),
     gender ENUM('male', 'female', 'other'),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     CONSTRAINT CHK_gender CHECK (gender IN ('male', 'female', 'other'))
+);
+
+-- Create users_roles table with composite key
+CREATE TABLE users_roles (
+    user_id BIGINT NOT NULL,
+    role_id BIGINT NOT NULL,
+    PRIMARY KEY (user_id, role_id),
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
+    FOREIGN KEY (role_id) REFERENCES roles(role_id) ON DELETE CASCADE
 );
 
 -- Create health_insurances table
@@ -41,6 +50,17 @@ CREATE TABLE health_insurances (
     name VARCHAR(50) NOT NULL,
     plan VARCHAR(50),
     details TEXT
+);
+
+-- Associate users (patients) with health insurances
+CREATE TABLE user_health_insurances (
+    user_id BIGINT,
+    health_insurance_id BIGINT,
+    membership_number VARCHAR(20),
+    PRIMARY KEY (user_id, health_insurance_id),
+    FOREIGN KEY (user_id) REFERENCES users(user_id),
+    FOREIGN KEY (health_insurance_id) REFERENCES health_insurances(health_insurance_id),
+    CONSTRAINT UC_membership_number UNIQUE (membership_number)
 );
 
 -- Create treatments table
@@ -62,21 +82,24 @@ CREATE TABLE teeth (
 -- Create appointments table
 CREATE TABLE appointments (
     appointment_id BIGINT PRIMARY KEY AUTO_INCREMENT,
-    patient_id BIGINT,
+    user_id BIGINT,
     date_time DATETIME NOT NULL,
+    timezone VARCHAR(50) DEFAULT 'UTC', -- Assuming UTC as default, adjust as needed
     observations TEXT,
     status ENUM('pending', 'confirmed', 'cancelled'),
-    FOREIGN KEY (patient_id) REFERENCES patients(patient_id)
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(user_id)
 );
 
--- Create treatments_patient table
-CREATE TABLE treatments_patient (
-    treatment_patient_id BIGINT PRIMARY KEY AUTO_INCREMENT,
-    patient_id BIGINT,
+-- Create treatments_user table
+CREATE TABLE treatments_user (
+    treatment_user_id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    user_id BIGINT,
     treatment_id BIGINT,
     start_date DATE,
     end_date DATE,
-    FOREIGN KEY (patient_id) REFERENCES patients(patient_id),
+    FOREIGN KEY (user_id) REFERENCES users(user_id),
     FOREIGN KEY (treatment_id) REFERENCES treatments(treatment_id),
     CONSTRAINT CHK_date_range CHECK (start_date < end_date)
 );
@@ -84,23 +107,12 @@ CREATE TABLE treatments_patient (
 -- Create repairs_tooth table
 CREATE TABLE repairs_tooth (
     repair_tooth_id BIGINT PRIMARY KEY AUTO_INCREMENT,
-    patient_id BIGINT,
+    user_id BIGINT,
     tooth_id BIGINT,
     description TEXT,
     repair_date DATE,
-    FOREIGN KEY (patient_id) REFERENCES patients(patient_id),
+    FOREIGN KEY (user_id) REFERENCES users(user_id),
     FOREIGN KEY (tooth_id) REFERENCES teeth(tooth_id)
-);
-
--- Associate patients with health insurances
-CREATE TABLE patient_health_insurances (
-    patient_id BIGINT,
-    health_insurance_id BIGINT,
-    membership_number VARCHAR(20),
-    PRIMARY KEY (patient_id, health_insurance_id),
-    FOREIGN KEY (patient_id) REFERENCES patients(patient_id),
-    FOREIGN KEY (health_insurance_id) REFERENCES health_insurances(health_insurance_id),
-    CONSTRAINT UC_membership_number UNIQUE (membership_number)
 );
 
 -- Add sessions table for user management
@@ -127,11 +139,11 @@ CREATE TABLE changes_history (
 -- Add billing and payments tables
 CREATE TABLE invoices (
     invoice_id BIGINT PRIMARY KEY AUTO_INCREMENT,
-    patient_id BIGINT,
+    user_id BIGINT,
     issue_date DATE NOT NULL,
     total_amount DECIMAL(10, 2) NOT NULL,
     status ENUM('pending', 'paid') DEFAULT 'pending',
-    FOREIGN KEY (patient_id) REFERENCES patients(patient_id)
+    FOREIGN KEY (user_id) REFERENCES users(user_id)
 );
 
 CREATE TABLE payments (
@@ -146,11 +158,12 @@ CREATE TABLE payments (
 -- Add agenda and reminders table
 CREATE TABLE reminders (
     reminder_id BIGINT PRIMARY KEY AUTO_INCREMENT,
-    patient_id BIGINT,
+    user_id BIGINT,
     reminder_date_time DATETIME NOT NULL,
+    timezone VARCHAR(50) DEFAULT 'UTC', -- Assuming UTC as default, adjust as needed
     message TEXT,
     status ENUM('pending', 'completed') DEFAULT 'pending',
-    FOREIGN KEY (patient_id) REFERENCES patients(patient_id)
+    FOREIGN KEY (user_id) REFERENCES users(user_id)
 );
 
 -- Add custom forms table
@@ -163,21 +176,19 @@ CREATE TABLE forms (
 
 CREATE TABLE form_responses (
     response_id BIGINT PRIMARY KEY AUTO_INCREMENT,
-    patient_id BIGINT,
+    user_id BIGINT,
     form_id BIGINT,
     responses TEXT,
     response_date DATE,
-    FOREIGN KEY (patient_id) REFERENCES patients(patient_id),
+    FOREIGN KEY (user_id) REFERENCES users(user_id),
     FOREIGN KEY (form_id) REFERENCES forms(form_id)
 );
 
--- Add patient portal table
-CREATE TABLE patient_portal (
+-- Add user portal table
+CREATE TABLE user_portal (
     portal_id BIGINT PRIMARY KEY AUTO_INCREMENT,
-    patient_id BIGINT,
     user_id BIGINT,
     registration_date_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (patient_id) REFERENCES patients(patient_id),
     FOREIGN KEY (user_id) REFERENCES users(user_id)
 );
 
@@ -185,15 +196,6 @@ CREATE TABLE patient_portal (
 CREATE TABLE permissions (
     permission_id BIGINT PRIMARY KEY AUTO_INCREMENT,
     permission_name VARCHAR(50) NOT NULL
-);
-
--- Create users_roles table with composite key
-CREATE TABLE users_roles (
-    user_id BIGINT NOT NULL,
-    role_id BIGINT NOT NULL,
-    PRIMARY KEY (user_id, role_id),
-    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
-    FOREIGN KEY (role_id) REFERENCES roles(role_id) ON DELETE CASCADE
 );
 
 -- Create permissions_roles table
@@ -204,3 +206,9 @@ CREATE TABLE permissions_roles (
     FOREIGN KEY (role_id) REFERENCES roles(role_id),
     FOREIGN KEY (permission_id) REFERENCES permissions(permission_id)
 );
+
+-- Create indices to improve query performance
+CREATE INDEX idx_user_email ON users(email);
+CREATE INDEX idx_user_phone ON users(phone);
+CREATE INDEX idx_appointment_datetime ON appointments(date_time);
+CREATE INDEX idx_invoice_date ON invoices(issue_date);
