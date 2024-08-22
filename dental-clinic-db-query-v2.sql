@@ -26,14 +26,15 @@ CREATE TABLE users (
     street VARCHAR(100),
     city VARCHAR(50),
     state VARCHAR(50),
-    postal_code VARCHAR(20),
-    country_code VARCHAR(5), -- ISO country code
+    country VARCHAR(50),
+    postal_code VARCHAR(6),
     phone VARCHAR(20),
-    gender ENUM('male', 'female', 'other'),
+    gender ENUM('MALE', 'FEMALE', 'OTHER'),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    CONSTRAINT CHK_gender CHECK (gender IN ('male', 'female', 'other'))
+    CONSTRAINT CHK_gender CHECK (gender IN ('MALE', 'FEMALE', 'OTHER'))
 );
+
 
 -- Create users_roles table with composite key
 CREATE TABLE users_roles (
