@@ -61,9 +61,30 @@ CREATE TABLE health_insurances (
     health_insurance_id BIGINT PRIMARY KEY AUTO_INCREMENT,
     clinic_id BIGINT NOT NULL,
     name VARCHAR(50) NOT NULL,
-    plan VARCHAR(50),
+    federation_code INT,
     details TEXT,
     FOREIGN KEY (clinic_id) REFERENCES clinics(clinic_id)
+);
+
+-- Create the new health_insurance_plans table
+CREATE TABLE health_insurance_plans (
+    plan_id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    health_insurance_id BIGINT NOT NULL,
+    plan_name VARCHAR(100) NOT NULL,
+    FOREIGN KEY (health_insurance_id) REFERENCES health_insurances(health_insurance_id) ON DELETE CASCADE,
+    UNIQUE (health_insurance_id, plan_name) -- Ensures a health insurance doesn't have duplicate plan names
+);
+
+CREATE TABLE fee_schedules (
+    fee_schedule_id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    plan_id BIGINT NOT NULL,
+    treatment_code VARCHAR(20) NOT NULL,
+    description TEXT,
+    total_fee DECIMAL(10, 2),
+    co_payment DECIMAL(10, 2) DEFAULT 0.00,
+    insurer_coverage DECIMAL(10, 2),
+    effective_date DATE,
+    FOREIGN KEY (plan_id) REFERENCES health_insurance_plans(plan_id) ON DELETE CASCADE
 );
 
 -- Associate users (patients) with health insurances
@@ -252,3 +273,4 @@ CREATE INDEX idx_user_email ON users(email);
 CREATE INDEX idx_user_phone ON users(phone);
 CREATE INDEX idx_appointment_datetime ON appointments(date_time);
 CREATE INDEX idx_invoice_date ON invoices(issue_date);
+CREATE INDEX idx_health_insurance_id ON health_insurance_plans(health_insurance_id);
